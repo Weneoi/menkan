@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>门槛记录</title>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <style>
+        /* 样式与之前相同，此处省略以节省篇幅，可从之前版本复制 */
+        /* ... 样式代码 ... */
+        :root {
+            --yong-color: #6c5ce7;
+            --nian-color: #ff7675;
+            --ban-color: #fab1a0;
+            --tao-color: #00b894;
+            --shui-color: #0984e3;
+            --niudan-color: #fd79a8;
+            --mengwu-zg: #ff9ff3;
+            --mengwu-sy: #00cec9;
+            --mengwu-nd: #fdcb6e;
+        }
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+            height: 100vh;
+            box-sizing: border-box;
+        }
+        .main-layout {
+            display: flex;
+            gap: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+            height: calc(100vh - 40px);
+        }
+        .input-panel {
+            width: 340px;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            overflow-y: auto;
+            max-height: 100%;
+            flex-shrink: 0;
+        }
+        .display-panel {
+            flex: 1;
+            overflow-y: auto;
+            max-height: 100%;
+        }
+        .form-group {
+            margin-bottom: 12px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 13px;
+            font-weight: bold;
+            color: #666;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+        .db-status {
+            font-size: 11px;
+            color: #2ecc71;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        .backup-zone {
+            background: #f9f9f9;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px dashed #ccc;
+            margin-bottom: 15px;
+        }
+        .btn-backup {
+            background: #00a8ff;
+            color: white;
+            font-size: 12px;
+            width: 48%;
+        }
+        .btn-restore {
+            background: #f1c40f;
+            color: white;
+            font-size: 12px;
+            width: 48%;
+        }
+        button {
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 8px;
+            transition: 0.3s;
+            width: 100%;
+        }
+        .btn-add { background: #333; color: white; }
+        .btn-update { background: #2ecc71; color: white; }
+        .btn-cancel { background: #95a5a6; color: white; font-size: 12px; }
+        .btn-img { background: #ff4d4f; color: white; margin-top: 20px; }
+
+        .filter-zone {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid #e9ecef;
+            margin-bottom: 15px;
+        }
+        .filter-zone label {
+            font-size: 12px;
+            font-weight: normal;
+            display: inline-flex;
+            align-items: center;
+            margin-right: 12px;
+            cursor: pointer;
+        }
+        .filter-zone input[type="checkbox"] {
+            width: auto;
+            margin-right: 4px;
+        }
+        .filter-group-title {
+            font-size: 13px;
+            font-weight: bold;
+            color: #555;
+            margin-bottom: 6px;
+        }
+        .filter-sub {
+            margin-left: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        #export-area {
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .header-info {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .header-info h1 {
+            margin: 0;
+            font-size: 30px;
+            color: #000;
+            letter-spacing: 2px;
+        }
+        .header-sub {
+            color: #666;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        .header-qq {
+            color: #333;
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+        hr {
+            border: 0;
+            border-top: 2px solid #f0f0f0;
+            margin: 25px 0;
+        }
+        .stats-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        .stats-table td {
+            width: 50%;
+            text-align: center;
+            font-size: 15px;
+            color: #666;
+        }
+        .stat-number {
+            color: #ff4d4f;
+            font-size: 28px;
+            font-weight: bold;
+            display: block;
+            margin-top: 5px;
+        }
+        .category-section {
+            margin-bottom: 40px;
+        }
+        .category-title {
+            font-size: 22px;
+            font-weight: bold;
+            color: #000;
+            margin-bottom: 20px;
+            border-left: 6px solid #ff4d4f;
+            padding-left: 12px;
+        }
+        .sub-category-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #555;
+            margin: 20px 0 15px 15px;
+            padding-left: 12px;
+            border-left: 4px solid #00cec9;
+        }
+        .record-item {
+            display: flex;
+            gap: 30px;
+            padding: 25px;
+            border: 1px solid #f0f0f0;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            background: #fafafa;
+            align-items: flex-start;
+            position: relative;
+            margin-left: 20px;
+        }
+        .record-img {
+            width: 280px;
+            height: auto;
+            max-height: 400px;
+            border-radius: 10px;
+            object-fit: contain;
+            background: #fff;
+            border: 1px solid #eee;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+        }
+        .record-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 180px;
+        }
+        .record-name {
+            font-size: 24px;
+            font-weight: bold;
+            color: #000;
+            margin-bottom: 12px;
+        }
+        .record-details {
+            font-size: 15px;
+            color: #777;
+            line-height: 2.2;
+        }
+        .record-amount {
+            color: #2ecc71;
+            font-size: 28px;
+            font-weight: bold;
+            margin-top: 20px;
+            text-align: right;
+        }
+        .item-ops {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        .btn-edit-small {
+            background: #3498db;
+            color: white;
+            padding: 5px 12px;
+            font-size: 12px;
+            border-radius: 4px;
+            width: auto;
+        }
+        .btn-del-small {
+            background: #e74c3c;
+            color: white;
+            padding: 5px 12px;
+            font-size: 12px;
+            border-radius: 4px;
+            width: auto;
+        }
+        .tag {
+            font-size: 12px;
+            padding: 2px 10px;
+            border-radius: 4px;
+            color: white;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+        .tag-永会 { background: var(--yong-color); }
+        .tag-年会 { background: var(--nian-color); }
+        .tag-半年会 { background: var(--ban-color); }
+        .tag-套会 { background: var(--tao-color); }
+        .tag-水印会 { background: var(--shui-color); }
+        .tag-扭蛋 { background: var(--niudan-color); }
+        .tag-萌物番-直购 { background: var(--mengwu-zg); }
+        .tag-萌物番-水印 { background: var(--mengwu-sy); }
+        .tag-萌物番-扭蛋 { background: var(--mengwu-nd); }
+
+        @media (max-width: 768px) {
+            .main-layout {
+                flex-direction: column;
+                height: auto;
+            }
+            .input-panel {
+                width: 100%;
+                max-height: none;
+                position: relative;
+            }
+            .display-panel {
+                max-height: none;
+            }
+            .record-item {
+                flex-direction: column;
+                align-items: center;
+                margin-left: 0;
+            }
+            .record-img {
+                width: 100%;
+                max-height: 250px;
+            }
+            .item-ops {
+                position: static;
+                justify-content: flex-end;
+                margin-bottom: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="main-layout">
+    <!-- 左侧面板（同前，省略部分重复代码） -->
+    <div class="input-panel">
+        <div class="db-status">● 存储模式：无限量 IndexedDB</div>
+        <h3 id="form-title" style="margin-top:0">📝 门槛记录录入</h3>
+
+        <div class="form-group">
+            <label>我的主QQ (必填)</label>
+            <input type="text" id="userMainQQ" placeholder="必填" oninput="updateHeaderQQ(this.value)">
+        </div>
+
+        <div class="backup-zone">
+            <label style="font-size:11px; color:#999;">数据存档管理</label>
+            <div style="display:flex; justify-content: space-between;">
+                <button class="btn-backup" onclick="exportJSON()">导出备份</button>
+                <button class="btn-restore" onclick="document.getElementById('importFile').click()">导入备份</button>
+            </div>
+            <input type="file" id="importFile" style="display:none" accept=".json" onchange="importJSON(this)">
+        </div>
+
+        <hr>
+
+        <div class="form-group">
+            <label>类型</label>
+            <select id="memberType">
+                <option value="永会">永会</option>
+                <option value="年会">年会</option>
+                <option value="半年会">半年会</option>
+                <option value="套会">套会</option>
+                <option value="水印会">水印会</option>
+                <option value="扭蛋">扭蛋</option>
+                <option value="萌物番-直购">萌物番-直购</option>
+                <option value="萌物番-水印">萌物番-水印</option>
+                <option value="萌物番-扭蛋">萌物番-扭蛋</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>会名 / 个人名</label>
+            <input type="text" id="clubName">
+        </div>
+        <div class="form-group">
+            <label>金额 (￥)</label>
+            <input type="number" id="amount" value="0">
+        </div>
+        <div class="form-group">
+            <label>关联 QQ</label>
+            <input type="text" id="qqNumber" placeholder="默认同主QQ">
+        </div>
+        <div class="form-group">
+            <label id="img-label">凭证大图</label>
+            <input type="file" id="imageInput" accept="image/*">
+        </div>
+
+        <div id="action-buttons">
+            <button id="submit-btn" class="btn-add" onclick="processAndSave()">确认保存</button>
+        </div>
+
+        <!-- 导出筛选 -->
+        <div class="filter-zone">
+            <div class="filter-group-title">📋 导出筛选（勾选要导出的分类）</div>
+            <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                <label><input type="checkbox" class="export-filter" value="永会" checked> 永会</label>
+                <label><input type="checkbox" class="export-filter" value="年会" checked> 年会</label>
+                <label><input type="checkbox" class="export-filter" value="半年会" checked> 半年会</label>
+                <label><input type="checkbox" class="export-filter" value="套会" checked> 套会</label>
+                <label><input type="checkbox" class="export-filter" value="水印会" checked> 水印会</label>
+                <label><input type="checkbox" class="export-filter" value="扭蛋" checked> 扭蛋</label>
+            </div>
+            <div style="margin-top:6px; font-weight:bold; color:#0984e3;">萌物番子类</div>
+            <div class="filter-sub">
+                <label><input type="checkbox" class="export-filter" value="萌物番-直购" checked> 直购</label>
+                <label><input type="checkbox" class="export-filter" value="萌物番-水印" checked> 水印</label>
+                <label><input type="checkbox" class="export-filter" value="萌物番-扭蛋" checked> 扭蛋</label>
+            </div>
+        </div>
+
+        <button class="btn-img" onclick="exportToImage()">📸 导出超清长图（按筛选）</button>
+        <button style="background:none; color:#ccc; font-size:10px;" onclick="clearAllData()">彻底清空数据库</button>
+    </div>
+
+    <!-- 右侧展示区 -->
+    <div class="display-panel">
+        <div id="export-area">
+            <div class="header-info">
+                <h1>门槛记录</h1>
+                <div class="header-sub">档案生成日期：2026/7/13</div>
+                <div class="header-qq" id="header-qq-display">QQ: 未设置</div>
+            </div>
+            <hr>
+            <table class="stats-table">
+                <tr>
+                    <td>入会总数<br><strong class="stat-number" id="total-count">0</strong></td>
+                    <td>累计支出<br><strong class="stat-number" id="total-amount">￥0.00</strong></td>
+                </tr>
+            </table>
+            <hr>
+            <div id="sections-container"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- IndexedDB 初始化 ---
+    let db;
+    const DB_NAME = "acodc_v13_db";
+    const STORE_NAME = "records";
+    let mainQQ = localStorage.getItem('acodc_v13_qq') || "";
+    let editingId = null;
+
+    const request = indexedDB.open(DB_NAME, 1);
+    request.onupgradeneeded = e => {
+        db = e.target.result;
+        db.createObjectStore(STORE_NAME, { keyPath: "id", autoIncrement: true });
+    };
+    request.onsuccess = e => {
+        db = e.target.result;
+        if(mainQQ) {
+            document.getElementById('userMainQQ').value = mainQQ;
+            document.getElementById('header-qq-display').innerText = "QQ: " + mainQQ;
+        }
+        renderAll();
+    };
+
+    function updateHeaderQQ(val) {
+        document.getElementById('header-qq-display').innerText = "QQ: " + (val || "未设置");
+        localStorage.setItem('acodc_v13_qq', val);
+        mainQQ = val;
+    }
+
+    // --- 数据操作 ---
+    function processAndSave() {
+        const name = document.getElementById('clubName').value;
+        const mQQ = document.getElementById('userMainQQ').value;
+        const sQQ = document.getElementById('qqNumber').value;
+        const fileInput = document.getElementById('imageInput');
+
+        if (!name || (!mQQ && !sQQ)) { alert("请填写完整！"); return; }
+        const finalQQ = sQQ || mQQ;
+
+        if (fileInput.files && fileInput.files[0]) {
+            const reader = new FileReader();
+            reader.readAsDataURL(fileInput.files[0]);
+            reader.onload = e => {
+                const img = new Image();
+                img.src = e.target.result;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const maxW = 1200;
+                    const scale = Math.min(1, maxW / img.width);
+                    canvas.width = img.width * scale;
+                    canvas.height = img.height * scale;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    saveToDB(name, finalQQ, canvas.toDataURL('image/jpeg', 0.8));
+                };
+            };
+        } else {
+            if (editingId) {
+                const transaction = db.transaction(STORE_NAME, "readonly");
+                transaction.objectStore(STORE_NAME).get(editingId).onsuccess = e => {
+                    saveToDB(name, finalQQ, e.target.result.img);
+                };
+            } else {
+                saveToDB(name, finalQQ, '');
+            }
+        }
+    }
+
+    function saveToDB(name, qq, img) {
+        const type = document.getElementById('memberType').value;
+        const amount = parseFloat(document.getElementById('amount').value) || 0;
+        const transaction = db.transaction(STORE_NAME, "readwrite");
+        const store = transaction.objectStore(STORE_NAME);
+        const data = { type, name, amount, qq, img, date: "2026/7/13" };
+        if (editingId) { data.id = editingId; store.put(data); }
+        else { store.add(data); }
+        transaction.oncomplete = () => {
+            alert("存档成功！");
+            cancelEdit();
+            renderAll();
+        };
+    }
+
+    // --- 渲染 ---
+    function renderAll() {
+        const transaction = db.transaction(STORE_NAME, "readonly");
+        const store = transaction.objectStore(STORE_NAME);
+        store.getAll().onsuccess = e => {
+            const records = e.target.result;
+            const container = document.getElementById('sections-container');
+            container.innerHTML = '';
+            let totalSum = 0;
+
+            const mainCategories = ["永会", "年会", "半年会", "套会", "水印会", "扭蛋", "萌物番"];
+            const mengwuSubKeys = ["萌物番-直购", "萌物番-水印", "萌物番-扭蛋"];
+            const subLabelMap = {
+                "萌物番-直购": "直购",
+                "萌物番-水印": "水印",
+                "萌物番-扭蛋": "扭蛋"
+            };
+
+            mainCategories.forEach(mainCat => {
+                let catRecords = [];
+                if (mainCat === "萌物番") {
+                    catRecords = records.filter(r => r.type && r.type.startsWith("萌物番-"));
+                } else {
+                    catRecords = records.filter(r => r.type === mainCat);
+                }
+                if (catRecords.length === 0) return;
+
+                const section = document.createElement('div');
+                section.className = 'category-section';
+                if (mainCat === "萌物番") {
+                    section.setAttribute('data-group', '萌物番');
+                } else {
+                    section.setAttribute('data-category', mainCat);
+                }
+
+                let html = `<div class="category-title">${mainCat}</div>`;
+
+                if (mainCat === "萌物番") {
+                    mengwuSubKeys.forEach(subKey => {
+                        const subRecords = catRecords.filter(r => r.type === subKey);
+                        if (subRecords.length === 0) return;
+                        const subLabel = subLabelMap[subKey];
+                        html += `<div class="sub-category-title" data-category="${subKey}">▸ ${subLabel}</div>`;
+                        subRecords.forEach(r => {
+                            totalSum += r.amount;
+                            html += buildRecordHTML(r);
+                        });
+                    });
+                } else {
+                    catRecords.forEach(r => {
+                        totalSum += r.amount;
+                        html += buildRecordHTML(r);
+                    });
+                }
+
+                section.innerHTML = html;
+                container.appendChild(section);
+            });
+
+            document.getElementById('total-count').innerText = records.length;
+            document.getElementById('total-amount').innerText = `￥${totalSum.toFixed(2)}`;
+        };
+    }
+
+    function buildRecordHTML(r) {
+        const imgHtml = r.img ? `<img src="${r.img}" class="record-img">` :
+            '<div style="width:280px;height:180px;background:#eee;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#999">无凭证图</div>';
+        return `
+            <div class="record-item">
+                <div class="item-ops" data-html2canvas-ignore="true">
+                    <button class="btn-edit-small" onclick="startEdit(${r.id})">编辑</button>
+                    <button class="btn-del-small" onclick="deleteRecord(${r.id})">删除</button>
+                </div>
+                ${imgHtml}
+                <div class="record-content">
+                    <div>
+                        <div class="record-name">${r.name}<span class="tag tag-${r.type}">${r.type}</span></div>
+                        <div class="record-details">关联 QQ：${r.qq}<br>存档时间：${r.date}</div>
+                    </div>
+                    <div class="record-amount">￥${r.amount.toFixed(2)}</div>
+                </div>
+            </div>
+        `;
+    }
+
+    // --- 编辑与删除 ---
+    function startEdit(id) {
+        editingId = id;
+        const transaction = db.transaction(STORE_NAME, "readonly");
+        transaction.objectStore(STORE_NAME).get(id).onsuccess = e => {
+            const r = e.target.result;
+            document.getElementById('memberType').value = r.type;
+            document.getElementById('clubName').value = r.name;
+            document.getElementById('amount').value = r.amount;
+            document.getElementById('qqNumber').value = r.qq;
+            document.getElementById('form-title').innerText = "✏️ 正在编辑";
+            document.getElementById('action-buttons').innerHTML = `
+                <button class="btn-update" onclick="processAndSave()">确认修改</button>
+                <button class="btn-cancel" onclick="cancelEdit()">取消编辑</button>
+            `;
+            window.scrollTo(0, 0);
+        };
+    }
+
+    function cancelEdit() {
+        editingId = null;
+        document.getElementById('form-title').innerText = "📝 门槛记录录入";
+        document.getElementById('action-buttons').innerHTML = `<button class="btn-add" onclick="processAndSave()">确认保存</button>`;
+        document.getElementById('clubName').value = '';
+        document.getElementById('amount').value = '0';
+        document.getElementById('qqNumber').value = '';
+        document.getElementById('imageInput').value = '';
+    }
+
+    function deleteRecord(id) {
+        if(confirm("确定删除吗？")) {
+            const transaction = db.transaction(STORE_NAME, "readwrite");
+            transaction.objectStore(STORE_NAME).delete(id).onsuccess = () => renderAll();
+        }
+    }
+
+    // --- ★★★ 导出图片（基于数据源精确统计）★★★ ---
+    function exportToImage() {
+        console.log("=== 开始导出（基于数据源统计） ===");
+
+        // 1. 获取选中的分类
+        const checkboxes = document.querySelectorAll('.export-filter');
+        const selected = new Set();
+        checkboxes.forEach(cb => {
+            if (cb.checked) selected.add(cb.value);
+        });
+        console.log("选中的分类:", Array.from(selected));
+
+        // 2. 从数据库读取所有记录
+        const transaction = db.transaction(STORE_NAME, "readonly");
+        const store = transaction.objectStore(STORE_NAME);
+        store.getAll().onsuccess = e => {
+            const allRecords = e.target.result;
+            console.log("总记录数:", allRecords.length);
+
+            // 3. 根据筛选条件过滤记录
+            const filteredRecords = allRecords.filter(r => {
+                // 如果类型在 selected 中，则保留
+                return selected.has(r.type);
+            });
+            console.log("筛选后记录数:", filteredRecords.length);
+
+            // 4. 计算统计
+            const totalCount = filteredRecords.length;
+            let totalAmount = 0;
+            filteredRecords.forEach(r => { totalAmount += r.amount; });
+            console.log("筛选后总金额:", totalAmount);
+
+            // 5. 保存原始统计值（用于恢复）
+            const origCount = document.getElementById('total-count').innerText;
+            const origAmount = document.getElementById('total-amount').innerText;
+
+            // 6. 更新统计栏
+            document.getElementById('total-count').innerText = totalCount;
+            document.getElementById('total-amount').innerText = `￥${totalAmount.toFixed(2)}`;
+
+            // 7. 根据筛选显示/隐藏 DOM 区块（为了截图视觉效果）
+            const sections = document.querySelectorAll('.category-section');
+            sections.forEach(section => {
+                const group = section.getAttribute('data-group');
+                const cat = section.getAttribute('data-category');
+
+                if (group === '萌物番') {
+                    const subTitles = section.querySelectorAll('.sub-category-title');
+                    let anySubVisible = false;
+                    subTitles.forEach(sub => {
+                        const subCat = sub.getAttribute('data-category');
+                        if (selected.has(subCat)) {
+                            sub.style.display = '';
+                            let next = sub.nextElementSibling;
+                            while (next && next.classList && next.classList.contains('record-item')) {
+                                next.style.display = '';
+                                next = next.nextElementSibling;
+                            }
+                            anySubVisible = true;
+                        } else {
+                            sub.style.display = 'none';
+                            let next = sub.nextElementSibling;
+                            while (next && next.classList && next.classList.contains('record-item')) {
+                                next.style.display = 'none';
+                                next = next.nextElementSibling;
+                            }
+                        }
+                    });
+                    section.style.display = anySubVisible ? '' : 'none';
+                } else {
+                    if (selected.has(cat)) {
+                        section.style.display = '';
+                    } else {
+                        section.style.display = 'none';
+                    }
+                }
+            });
+
+            // 8. 截图
+            const area = document.getElementById('export-area');
+            html2canvas(area, {
+                useCORS: true,
+                scale: 3,
+                backgroundColor: "#ffffff"
+            }).then(canvas => {
+                // 恢复统计和显示
+                document.getElementById('total-count').innerText = origCount;
+                document.getElementById('total-amount').innerText = origAmount;
+                sections.forEach(s => s.style.display = '');
+                const a = document.createElement('a');
+                a.download = `超清门槛记录_${Date.now()}.png`;
+                a.href = canvas.toDataURL("image/png");
+                a.click();
+                console.log("导出完成");
+            }).catch(err => {
+                // 出错恢复
+                document.getElementById('total-count').innerText = origCount;
+                document.getElementById('total-amount').innerText = origAmount;
+                sections.forEach(s => s.style.display = '');
+                alert("导出失败，请查看控制台错误信息。");
+                console.error(err);
+            });
+        };
+    }
+
+    // --- 备份与导入 ---
+    function exportJSON() {
+        const transaction = db.transaction(STORE_NAME, "readonly");
+        transaction.objectStore(STORE_NAME).getAll().onsuccess = e => {
+            const blob = new Blob([JSON.stringify({ mainQQ, records: e.target.result })], { type: 'application/json' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `门槛备份_${new Date().toLocaleDateString()}.json`;
+            a.click();
+        };
+    }
+
+    function importJSON(input) {
+        const reader = new FileReader();
+        reader.onload = e => {
+            const data = JSON.parse(e.target.result);
+            const transaction = db.transaction(STORE_NAME, "readwrite");
+            const store = transaction.objectStore(STORE_NAME);
+            store.clear().onsuccess = () => {
+                data.records.forEach(r => { delete r.id; store.add(r); });
+                localStorage.setItem('acodc_v13_qq', data.mainQQ || "");
+                alert("导入成功！");
+                location.reload();
+            };
+        };
+        reader.readAsText(input.files[0]);
+    }
+
+    function clearAllData() {
+        if(confirm("确定彻底清空吗？")) {
+            const transaction = db.transaction(STORE_NAME, "readwrite");
+            transaction.objectStore(STORE_NAME).clear().onsuccess = () => location.reload();
+        }
+    }
+</script>
+</body>
+</html>
